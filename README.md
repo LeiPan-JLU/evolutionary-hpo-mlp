@@ -1,4 +1,4 @@
-# Evolutionary Hyperparameter Optimization for Multi-Layer Perceptron
+﻿# Evolutionary Hyperparameter Optimization for Multi-Layer Perceptron
 
 A reproducible comparison of five search strategies for tuning a two-layer MLP on
 the scikit-learn `digits` dataset. The search space mixes continuous and integer
@@ -18,8 +18,8 @@ $$
 
 | Variable | Meaning | Search range | Decoding |
 | --- | --- | --- | --- |
-| x₁ | log₁₀ learning rate | [−5.0, −1.0] | α = 10^x₁ |
-| x₂ | log₁₀ L2 penalty | [−6.0, −1.0] | λ = 10^x₂ |
+| x₁ | log₁₀ learning rate | [−5.0, −1.0] | α = 10ˣ¹ |
+| x₂ | log₁₀ L2 penalty | [−6.0, −1.0] | λ = 10ˣ² |
 | x₃ | first hidden layer size | [16, 256] | h₁ = round(x₃) |
 | x₄ | second hidden layer size | [8, 128] | h₂ = round(x₄) |
 
