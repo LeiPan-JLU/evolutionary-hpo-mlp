@@ -1,4 +1,4 @@
-﻿# Evolutionary Hyperparameter Optimization for Multi-Layer Perceptron
+# Evolutionary Hyperparameter Optimization for Multi-Layer Perceptron
 
 A reproducible comparison of five search strategies for tuning a two-layer MLP on
 the scikit-learn `digits` dataset. The search space mixes continuous and integer
@@ -45,16 +45,18 @@ signed-rank test against jDE at α = 0.05 (`+` better, `−` worse, `≈` not si
 
 | Algorithm | Best | Mean ± Std | Median | Worst | Time (s) | vs jDE |
 | --- | ---: | ---: | ---: | ---: | ---: | :---: |
-| Random Search | 0.0189 | 0.0237 ± 0.0017 | 0.0236 | 0.0256 | 649.4 | − |
-| Real-coded GA | **0.0172** | **0.0213 ± 0.0021** | **0.0206** | 0.0256 | 395.8 | + |
-| LDIW-PSO | 0.0206 | 0.0220 ± 0.0011 | 0.0217 | 0.0250 | 503.9 | ≈ |
-| DE/rand/1/bin | 0.0200 | 0.0217 ± 0.0013 | 0.0211 | 0.0256 | 542.2 | + |
-| jDE | 0.0200 | 0.0223 ± 0.0012 | 0.0223 | 0.0250 | 441.9 | — |
+| Random Search | 0.0189 | 0.0237 ± 0.0017 | 0.0236 | 0.0256 | 475.1 | − |
+| Real-coded GA | **0.0172** | **0.0213 ± 0.0021** | **0.0206** | 0.0256 | 263.4 | + |
+| LDIW-PSO | 0.0206 | 0.0220 ± 0.0011 | 0.0217 | 0.0250 | 337.0 | ≈ |
+| DE/rand/1/bin | 0.0200 | 0.0217 ± 0.0013 | 0.0211 | 0.0256 | 389.5 | + |
+| jDE | 0.0200 | 0.0223 ± 0.0012 | 0.0223 | 0.0250 | 403.7 | — |
 
 Wilcoxon p-values against jDE: Random Search 0.0042, Real-coded GA 0.0290,
-LDIW-PSO 0.2179, DE 0.0458. At this small budget the individual parameter
-adaptation of jDE did **not** improve over fixed-parameter DE; the full discussion
-is in the course report.
+LDIW-PSO 0.2179, DE 0.0458. Average cache hits per run were 0.0 (Random Search),
+92.1 (Real-coded GA), 0.0 (LDIW-PSO), 1.1 (DE), and 0.9 (jDE); the GA value
+reflects repeated integer hidden-layer combinations. At this small budget the
+individual parameter adaptation of jDE did **not** improve over fixed-parameter DE;
+the full discussion is in the course report.
 
 ![Convergence curves](figures/convergence.png)
 
@@ -75,8 +77,8 @@ python plot_and_stats.py
 `main.py` runs the five strategies in parallel shards and writes
 `results/raw_results.csv`, `results/convergence_history.npy`, and
 `results/jde_params_history.npy`. `plot_and_stats.py` writes
-`results/statistics.csv` and the three figures. On a 32-core machine the full
-run takes about 46 minutes.
+`results/statistics.csv` and the three figures. The default 8-shard configuration
+takes roughly 70–80 minutes on a 32-core machine; single-run times are 263–475 s.
 
 ## Notes on Reproducibility
 

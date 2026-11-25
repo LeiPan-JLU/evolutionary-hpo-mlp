@@ -21,7 +21,7 @@ N_RUNS = 20
 POP_SIZE = 20
 MAX_FES = 400
 BASE_SEED = 2026
-N_SHARDS = 20
+N_SHARDS = 8
 ALGOS = ["RandomSearch", "RealGA", "LDIW-PSO", "DE", "jDE"]
 
 RUNNERS = {
@@ -37,6 +37,7 @@ def run_one(task):
     algo, run_id = task
     seed = BASE_SEED + run_id
     initial = problems.initial_population(seed, POP_SIZE)
+    problems.clear_eval_cache()  # 每个算法独立计时，避免共用前序算法的缓存
     start = time.perf_counter()
     result = RUNNERS[algo](seed, initial)
     elapsed = time.perf_counter() - start
@@ -52,6 +53,7 @@ def run_one(task):
         "best_h1": h1,
         "best_h2": h2,
         "time_sec": elapsed,
+        "cache_hits": problems.get_cache_hits(),
         "history": result["history"].tolist(),
         "jde_params": None if result["extra"] is None else result["extra"].tolist(),
     }
@@ -64,7 +66,8 @@ def run_shard(shard_id, n_shards):
         res = run_one(task)
         items.append(res)
         print(f"[shard {shard_id:02d} {i}/{len(tasks)}] {res['algorithm']:12s} "
-              f"run={res['run']:02d} err={res['best_error']:.4f} time={res['time_sec']:.1f}s",
+              f"run={res['run']:02d} err={res['best_error']:.4f} "
+              f"hits={res['cache_hits']:3d} time={res['time_sec']:.1f}s",
               flush=True)
     with open(os.path.join("results", f"part_{shard_id:02d}.json"), "w", encoding="utf-8") as handle:
         json.dump({"items": items}, handle, ensure_ascii=False)
@@ -92,7 +95,7 @@ def run_parent():
 
     csv_path = os.path.join("results", "raw_results.csv")
     fields = ["algorithm", "run", "seed", "best_error", "best_lr", "best_alpha",
-              "best_h1", "best_h2", "time_sec"]
+              "best_h1", "best_h2", "time_sec", "cache_hits"]
     with open(csv_path, "w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()

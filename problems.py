@@ -21,6 +21,7 @@ X = X.astype(np.float64) / 16.0  # 像素值缩到 0~1，MLP 收敛更稳
 
 _splits_cache = {}
 _eval_cache = {}
+cache_hits = 0
 
 
 def get_splits(seed):
@@ -40,11 +41,24 @@ def decode(x):
     return lr, alpha, h1, h2
 
 
+def clear_eval_cache():
+    """每个算法任务开始前清空评价缓存，避免同分片内的算法共用前序缓存。"""
+    global _eval_cache, cache_hits
+    _eval_cache = {}
+    cache_hits = 0
+
+
+def get_cache_hits():
+    return cache_hits
+
+
 def evaluate(x, seed):
     """返回 5 折平均验证错误率；同一个 run 内重复参数直接查缓存。"""
+    global cache_hits
     lr, alpha, h1, h2 = decode(x)
     key = (seed, round(lr, 12), round(alpha, 12), h1, h2)
     if key in _eval_cache:
+        cache_hits += 1
         return _eval_cache[key]
 
     errors = []

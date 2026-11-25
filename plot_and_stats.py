@@ -35,7 +35,7 @@ STYLES = {
 MAX_FES = 400
 POP_SIZE = 20
 
-plt.rcParams["font.sans-serif"] = ["SimHei", "Microsoft YaHei"]
+plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "Arial"]
 plt.rcParams["axes.unicode_minus"] = False
 plt.rcParams["figure.dpi"] = 120
 
@@ -45,13 +45,17 @@ def load_results():
         rows = list(csv.DictReader(handle))
     data = {algo: [] for algo in ALGOS}
     times = {algo: [] for algo in ALGOS}
+    hits = {algo: [] for algo in ALGOS}
     for row in rows:
         data[row["algorithm"]].append(float(row["best_error"]))
         times[row["algorithm"]].append(float(row["time_sec"]))
-    return {k: np.array(v) for k, v in data.items()}, {k: np.array(v) for k, v in times.items()}
+        hits[row["algorithm"]].append(int(row["cache_hits"]))
+    return ({k: np.array(v) for k, v in data.items()},
+            {k: np.array(v) for k, v in times.items()},
+            {k: np.array(v) for k, v in hits.items()})
 
 
-def make_statistics(data, times):
+def make_statistics(data, times, hits):
     ref = data["jDE"]
     rows = []
     for algo in ALGOS:
@@ -79,12 +83,13 @@ def make_statistics(data, times):
             "worst": float(vals.max()),
             "mean_time": float(times[algo].mean()),
             "std_time": float(times[algo].std(ddof=1)),
+            "mean_cache_hits": float(hits[algo].mean()),
             "p_value": p_value,
             "mark": mark,
         })
     with open(os.path.join("results", "statistics.csv"), "w", newline="", encoding="utf-8") as handle:
         fields = ["algorithm", "best", "mean", "std", "median", "worst",
-                  "mean_time", "std_time", "p_value", "mark"]
+                  "mean_time", "std_time", "mean_cache_hits", "p_value", "mark"]
         writer = csv.DictWriter(handle, fieldnames=fields)
         writer.writeheader()
         writer.writerows(rows)
@@ -153,6 +158,7 @@ def plot_ablation(history, jde_params):
         ax.fill_between(fes, mean - std, mean + std, color=COLORS[algo], alpha=0.15, linewidth=0)
     ax.set_xlabel("函数评价次数 (FEs)")
     ax.set_ylabel("5 折交叉验证错误率")
+    ax.set_title("(a) 收敛曲线对比", fontsize=11)
     ax.legend(frameon=False, fontsize=9)
     style_axis(ax)
 
@@ -165,6 +171,7 @@ def plot_ablation(history, jde_params):
     ax.set_xlabel("进化代数")
     ax.set_ylabel("参数均值")
     ax.set_ylim(0.0, 1.05)
+    ax.set_title("(b) jDE 参数均值演化", fontsize=11)
     ax.legend(frameon=False, fontsize=9)
     style_axis(ax)
 
@@ -175,12 +182,13 @@ def plot_ablation(history, jde_params):
 
 def main():
     os.makedirs("figures", exist_ok=True)
-    data, times = load_results()
-    rows = make_statistics(data, times)
-    print(f"{'algorithm':14s} {'mean':>8s} {'std':>8s} {'median':>8s} {'time':>8s} {'p':>8s} {'mark':>4s}")
+    data, times, hits = load_results()
+    rows = make_statistics(data, times, hits)
+    print(f"{'algorithm':14s} {'mean':>8s} {'std':>8s} {'median':>8s} {'time':>8s} {'hits':>6s} {'p':>8s} {'mark':>4s}")
     for row in rows:
         print(f"{row['algorithm']:14s} {row['mean']:8.4f} {row['std']:8.4f} "
-              f"{row['median']:8.4f} {row['mean_time']:8.1f} {row['p_value']:8.4f} {row['mark']:>4s}")
+              f"{row['median']:8.4f} {row['mean_time']:8.1f} {row['mean_cache_hits']:6.1f} "
+              f"{row['p_value']:8.4f} {row['mark']:>4s}")
 
     history = np.load(os.path.join("results", "convergence_history.npy"))
     jde_params = np.load(os.path.join("results", "jde_params_history.npy"))
